@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import Login from "./components/HelloWorld.vue";
+import Login from "../src/components/Login.vue";
 import { useChats } from "../src/hooks/use-chats";
 const { chats, loading } = useChats();
+const token = localStorage.getItem("token");
 </script>
 
 <template>
