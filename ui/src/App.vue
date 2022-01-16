@@ -1,27 +1,28 @@
 <script setup lang="ts">
+import { ref } from "@vue/reactivity";
 import Login from "../src/components/Login.vue";
+import SideBar from "../src/components/SideBar.vue";
+import SideChat from "../src/components/SideChat.vue";
 import { useChats } from "../src/hooks/use-chats";
 const { chats, loading } = useChats();
-const token = localStorage.getItem("token");
+const selected = ref(4);
 </script>
 
 <template>
   <div>
-    <div v-if="!token">
-      <Login />
+    <side-bar>
+      <side-chat
+        v-for="chat in chats"
+        :key="chat.id"
+        :chat="chat"
+        :selected="chat.id === selected"
+      />
+    </side-bar>
+    <!-- <div v-if="!token">
+      <login />
     </div>
     <div v-else>
-      <div v-if="loading">Loading...</div>
-      <div v-if="!loading">
-        <h1 class="text-3xl font-bold first-letter:capitalize">
-          ahasello world!
-        </h1>
-        <div v-for="chat in chats" :key="chat.id">
-          {{ chat }}
-          <br />
-        </div>
-      </div>
-    </div>
+    </div> -->
   </div>
 </template>
 

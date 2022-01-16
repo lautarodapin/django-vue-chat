@@ -21,7 +21,10 @@ export const useChats = () => {
         chats.value = data.results
         loading.value = false
     }
+
     fetchChats()
+
+
 
     return {chats, loading}
 }
