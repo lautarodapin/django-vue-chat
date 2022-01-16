@@ -1,16 +1,11 @@
 <script lang="ts" setup>
-import { defineProps, withDefaults } from "vue";
+import { defineProps, withDefaults, defineEmits } from "vue";
 import { ChatDetail } from "../types";
 
-// withDefaults(defineProps<{
-//   size?: number
-//   labels?: string[]
-// }>(), {
-//   size: 3,
-//   labels: () => ['default label']
-// })
-
-const { chat, selected } = withDefaults(
+const emit = defineEmits<{
+  (e: "click", id: number): void;
+}>();
+const props = withDefaults(
   defineProps<{
     chat: ChatDetail;
     selected: boolean;
@@ -19,10 +14,13 @@ const { chat, selected } = withDefaults(
     selected: false,
   }
 );
+
+const onClick = () => emit("click", props.chat.id);
 </script>
 
 <template>
   <div
+    @click="onClick"
     class="bg-slate-800 py-8 px-2 hover:bg-slate-300 hover:cursor-pointer"
     :class="{ 'bg-slate-500': selected }"
   >
