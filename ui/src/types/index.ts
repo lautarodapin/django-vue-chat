@@ -34,6 +34,8 @@ export type MessageDetail = {
     mod_at: string
 }
 
+export type MessageList = Pagination<MessageDetail>
+
 export type Authtoken = {
     key: string
 }
