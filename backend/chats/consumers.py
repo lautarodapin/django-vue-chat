@@ -14,23 +14,30 @@ class ChatConsumer(
     # permission_classes = [IsAuthenticated]
 
     @model_observer(Message)
-    async def messagea_activity(self, message, observer=None, **kwargs):
+    async def message_activity(self, message, observer=None, **kwargs):
         await self.send_json(message)
 
-    @messagea_activity.serializer
+    @message_activity.serializer
     def chat_activity(self, instance: Message, action, **kwargs):
+        print('serializer', instance, action, kwargs)
         return MessageSerializer(instance=instance).data
 
-    @messagea_activity.groups_for_signal
-    def messagea_activity(self, instance: Message, **kwargs):
+    @message_activity.groups_for_signal
+    def message_activity(self, instance: Message, **kwargs):
         # this block of code is called very often *DO NOT make DB QUERIES HERE*
-        yield f'-chat__{instance.chat_id}'
+        print('groups_for_signal', instance)
+        yield f'-chat__{instance.chat.id}'
 
-    @messagea_activity.groups_for_consumer
-    def messagea_activity(self, id=None, **kwargs):
+    @message_activity.groups_for_consumer
+    def message_activity(self, id=None, **kwargs):
+        print('groups_for_consumer', id)
         if id is not None:
             yield f'-chat__{id}'
 
     @action()
     async def subscribe_to_chat(self, id, **kwargs):
-        await self.messagea_activity.subscribe(id=id)
+        await self.message_activity.subscribe(id=id)
+
+    @action()
+    async def unsubscribe_to_chat(self, id, **kwargs):
+        await self.message_activity.unsubscribe(id=id)
