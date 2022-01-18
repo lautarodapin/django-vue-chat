@@ -19,18 +19,15 @@ class ChatConsumer(
 
     @message_activity.serializer
     def chat_activity(self, instance: Message, action, **kwargs):
-        print('serializer', instance, action, kwargs)
         return MessageSerializer(instance=instance).data
 
     @message_activity.groups_for_signal
     def message_activity(self, instance: Message, **kwargs):
         # this block of code is called very often *DO NOT make DB QUERIES HERE*
-        print('groups_for_signal', instance)
         yield f'-chat__{instance.chat.id}'
 
     @message_activity.groups_for_consumer
     def message_activity(self, id=None, **kwargs):
-        print('groups_for_consumer', id)
         if id is not None:
             yield f'-chat__{id}'
 
