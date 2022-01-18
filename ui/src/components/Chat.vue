@@ -109,14 +109,11 @@
 <template>
     <div class="h-screen bg-stone-100">
         <div class="min-h-full flex flex-col-reverse">
-            <form
-                @submit.prevent="createMessage"
-                class="grid grid-cols-12 gap-1"
-            >
+            <form @submit.prevent="createMessage" class="flex flex-row">
                 <input
                     v-model="input"
                     type="text"
-                    class="bg-slate-200 rounded-md px-2 col-span-10"
+                    class="bg-slate-200 rounded-md px-2 mr-2 grow"
                 />
                 <button
                     type="submit"
@@ -126,7 +123,6 @@
                         bg-slate-700
                         text-white
                         hover:bg-slate-400 hover:text-black
-                        col-span-2
                     "
                 >
                     Send
