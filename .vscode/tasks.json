@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+        {
+            "type": "npm",
+            "script": "dev",
+            "path": "ui-svelte/",
+            "group": "none",
+            "problemMatcher": [],
+            "label": "npm: dev - ui-svelte",
+            "detail": "rollup -c"
+        }
+    ]
+}
