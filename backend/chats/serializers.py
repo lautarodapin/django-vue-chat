@@ -8,6 +8,7 @@ from users.models import User
 class ChatSerializer(serializers.ModelSerializer):
     users = PrimaryKeyRelatedField(queryset=User.objects.all(), many=True)
     active_users = UserSerializer(read_only=True, many=True)
+    last_message = serializers.SerializerMethodField()
 
     class Meta:
         model = Chat
@@ -20,8 +21,11 @@ class ChatSerializer(serializers.ModelSerializer):
             'mod_by',
             'users',
             'active_users',
+            'last_message',
         ]
 
+    def get_last_message(self, obj: Chat):
+        return MessageSerializer(obj.messages.last()).data
 
 class MinimalChatSerializer(serializers.ModelSerializer):
     class Meta:
