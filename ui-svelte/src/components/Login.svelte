@@ -1,6 +1,6 @@
 <script lang="ts">
     import { prevent_default } from "svelte/internal";
-import { Token } from '../stores/token';
+    import { Token } from "../stores/token";
 
     let username: string;
     let password: string;
@@ -33,9 +33,9 @@ import { Token } from '../stores/token';
     <input id="password" bind:value={password} type="password" />
     <button type="submit">
         {#if loading}
-             Login...
+            Login...
         {:else}
-             Login
+            Login
         {/if}
     </button>
 </form>
