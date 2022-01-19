@@ -1,20 +1,15 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import Chat from "./components/Chat.svelte";
     import Chats from "./components/Chats.svelte";
     import Login from "./components/Login.svelte";
     import SideBar from "./components/SideBar.svelte";
     import { Token } from "./stores/token";
 
     let token: string;
-    let ws: WebSocket;
     const unToken = Token.subscribe((t) => {
         token = t;
         console.log("token changed", t);
-        if (t) {
-            ws = new WebSocket(`ws://localhost:8000/ws/chats/?token=${t}`);
-        } else if (ws) {
-            ws.close();
-        }
     });
     onDestroy(() => {
         unToken();
@@ -28,6 +23,9 @@
         <SideBar>
             <Chats />
         </SideBar>
+        <div class="pl-64">
+            <Chat />
+        </div>
     {:else}
         <Login />
     {/if}

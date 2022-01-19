@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
-    import { chat as chatStore } from "../stores/chat";
+    import { chatSelected as chatStore } from "../stores/chat";
 
     import type { ChatDetail, ChatList } from "../types";
 
