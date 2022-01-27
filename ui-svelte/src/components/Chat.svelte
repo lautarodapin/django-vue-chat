@@ -4,6 +4,7 @@
     import { chatSelected } from "../stores/chat";
     import { Token } from "../stores/token";
     import type { ChatDetail, MessageDetail, MessageList } from "../types";
+    import { formatDate, fromNow } from "../utils";
 
     let input: string;
     let chat: string;
@@ -12,26 +13,30 @@
     let loading: boolean = false;
     let ws: WebSocket | undefined;
 
+    const loadMessages = async (
+        url: string = `http://localhost:8000/messages/?chat=${chat}`
+    ) => {
+        loading = true;
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Token ${localStorage.getItem("token")}`,
+            },
+        });
+        const data: MessageList = await response.json();
+        messages = [...messages, ...data.results];
+        next = data.next;
+        loading = false;
+    };
     const unChatSelected = chatSelected.subscribe(async (newChat) => {
         if (ws?.readyState === WebSocket.OPEN) unsubscribe();
         chat = newChat;
         if (!chat) return;
-        loading = true;
-        const response = await fetch(
-            `http://localhost:8000/messages/?chat=${newChat}`,
-            {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Token ${localStorage.getItem("token")}`,
-                },
-            }
-        );
-        const data: MessageList = await response.json();
-        messages = [...data.results];
-        next = data.next;
+        messages.splice(0, messages.length);
+        messages = messages;
+        await loadMessages(`http://localhost:8000/messages/?chat=${newChat}`);
         if (ws?.readyState === WebSocket.OPEN) onOpen();
-        loading = false;
     });
 
     const createMessage = async () => {
@@ -46,6 +51,7 @@
                 chat: chat,
             }),
         });
+        input = "";
     };
 
     const onOpen = () => {
@@ -79,16 +85,26 @@
         messages = [data, ...messages];
     };
 
-    const unToken = Token.subscribe((t) => {
-        console.log("token changed", t);
+    const onClose = () => {
+        setTimeout(createWebsocket, 10 * 1000);
+    };
+
+    const onError = () => onClose();
+
+    const createWebsocket = () => {
         const token = localStorage.getItem("token");
         if (token && token !== "") {
             ws = new WebSocket(`ws://localhost:8000/ws/chats/?token=${token}`);
             ws?.addEventListener("open", onOpen);
             ws?.addEventListener("message", onMessage);
+            ws?.addEventListener("close", onClose);
         } else if (ws) {
             ws?.close();
         }
+    };
+    const unToken = Token.subscribe((t) => {
+        console.log("token changed", t);
+        createWebsocket();
     });
 
     onDestroy(() => {
@@ -119,13 +135,29 @@
                 Send
             </button>
         </form>
-        {#each messages as { id, created_at, text, created_by: { first_name, last_name, username, email } }}
-            <div>
-                {created_at} - {username}: {text}
-            </div>
-        {:else}
-            No messages
-        {/each}
+        <div class="overflow-y-scroll flex flex-col-reverse">
+            {#each messages as { id, created_at, text, created_by: { first_name, last_name, username, email } }}
+                <div>
+                    {fromNow(created_at)} - {username}: {text}
+                </div>
+            {:else}
+                No messages
+            {/each}
+        </div>
+        {#if next}
+            <button
+                class="
+                    px-10
+                    rounded-md
+                    bg-slate-700
+                    text-white
+                    hover:bg-slate-400 hover:text-black
+                "
+                on:click={() => loadMessages(next)}
+            >
+                Load more
+            </button>
+        {/if}
     </div>
 {:else}
     Loading...
