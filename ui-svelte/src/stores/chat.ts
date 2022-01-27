@@ -1,4 +1,6 @@
 import {writable} from 'svelte/store'
 import type {ChatDetail} from '../types'
 
-export const chatSelected = writable<ChatDetail>(null)
+const search = new URLSearchParams(window.location.search)
+search.get
+export const chatSelected = writable<string>(search.get('chat') || null)

@@ -12,15 +12,25 @@
             },
         });
         const data: ChatList = await response.json();
-        chatStore.update(() => data.results[0]);
+        chatStore.update((old) => {
+            if (old) return old;
+            return data.results[0].id.toString();
+        });
         return data.results;
     };
 
     const handleClick = (chat: ChatDetail) => {
-        chatStore.update(() => chat);
+        const searchParams = new URLSearchParams(window.location.search);
+        searchParams.set("chat", chat.id.toString());
+        history.pushState(
+            null,
+            "",
+            window.location.pathname + "?" + searchParams.toString()
+        );
+        chatStore.update(() => chat.id.toString());
     };
 
-    let selectedChat: ChatDetail;
+    let selectedChat: string;
     let chatsPromise = getChats();
     const unSub = chatStore.subscribe((v) => (selectedChat = v));
     onDestroy(unSub);
@@ -33,7 +43,7 @@
         <div
             on:click={() => handleClick(chat)}
             class="bg-slate-800 py-8 px-2 hover:bg-slate-300 hover:cursor-pointer"
-            class:bg-slate-500={selectedChat.id === chat.id}
+            class:bg-slate-500={Number(selectedChat) === chat.id}
         >
             {chat.id}
             {#if chat.last_message && chat.last_message.created_by}
