@@ -15,6 +15,7 @@ class ChatConsumer(
 
     @model_observer(Message)
     async def message_activity(self, message, observer=None, **kwargs):
+        print('message_activity', message)
         await self.send_json(message)
 
     @message_activity.serializer

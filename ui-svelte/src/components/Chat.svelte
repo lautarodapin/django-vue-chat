@@ -45,27 +45,32 @@
 
     let ws: WebSocket;
 
+    const onOpen = () => {
+        console.log("ws opened");
+        if (!chat) setTimeout(onOpen, 2000);
+        ws.send(
+            JSON.stringify({
+                action: "subscribe_to_chat",
+                id: chat.id,
+                request_id: Math.random(),
+            })
+        );
+        console.log(chat.id);
+    };
+    const onMessage = (e: MessageEvent<any>) => {
+        const data: MessageDetail = JSON.parse(e.data);
+        console.log("ws message", data);
+        console.log("old messages", messages);
+        messages = [data, ...messages];
+    };
+
     const unToken = Token.subscribe((t) => {
         console.log("token changed", t);
         const token = localStorage.getItem("token");
-        if (token) {
+        if (token && token !== "") {
             ws = new WebSocket(`ws://localhost:8000/ws/chats/?token=${token}`);
-            ws.onopen = () => {
-                console.log("ws opened");
-                ws.send(
-                    JSON.stringify({
-                        action: "subscribe_to_chat",
-                        id: chat.id,
-                        request_id: Math.random(),
-                    })
-                );
-                console.log(chat.id);
-            };
-            ws.onmessage = (e) => {
-                const data: MessageDetail = JSON.parse(e.data);
-                console.log("ws message", data);
-                messages = [...messages, data];
-            };
+            ws.addEventListener("open", onOpen);
+            ws.addEventListener("message", onMessage);
         } else if (ws) {
             ws.close();
         }
