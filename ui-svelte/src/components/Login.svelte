@@ -21,16 +21,18 @@
     };
 </script>
 
-<form on:submit|preventDefault={onSubmit}>
-    <label for="username">Username</label>
-    <input id="username" bind:value={username} type="text" />
-    <label for="password">Password</label>
-    <input id="password" bind:value={password} type="password" />
-    <button type="submit">
-        {#if loading}
-            Login...
-        {:else}
-            Login
-        {/if}
-    </button>
-</form>
+<div class="h-screen flex items-center justify-center">
+    <form on:submit|preventDefault={onSubmit} class="">
+        <label for="username">Username</label>
+        <input id="username" bind:value={username} type="text" />
+        <label for="password">Password</label>
+        <input id="password" bind:value={password} type="password" />
+        <button type="submit">
+            {#if loading}
+                Login...
+            {:else}
+                Login
+            {/if}
+        </button>
+    </form>
+</div>
