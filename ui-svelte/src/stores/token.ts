@@ -6,7 +6,7 @@ const token = () => {
         subscribe,
         signout: () => {
             localStorage.removeItem('token')
-            set(null)
+            set('')
         },
         signin: (token: string) => {
             localStorage.setItem('token', token)
