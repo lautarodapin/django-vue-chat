@@ -8,8 +8,9 @@ const token = () => {
             localStorage.removeItem('token')
             set(null)
         },
-        signin: () => {
-            set(localStorage.getItem('token'))
+        signin: (token: string) => {
+            localStorage.setItem('token', token)
+            set(token)
         },
     }
 }
