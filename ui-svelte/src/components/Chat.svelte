@@ -3,6 +3,7 @@
 
     import { chatSelected } from "../stores/chat";
     import { Token } from "../stores/token";
+    import { websocket } from "../stores/websocket";
     import type { ChatDetail, MessageDetail, MessageList } from "../types";
     import { formatDate, fromNow } from "../utils";
 
@@ -85,30 +86,35 @@
         messages = [data, ...messages];
     };
 
-    const onClose = () => {
-        setTimeout(createWebsocket, 10 * 1000);
-    };
+    // const onClose = () => {
+    //     setTimeout(createWebsocket, 10 * 1000);
+    // };
 
-    const onError = () => onClose();
+    // const onError = () => onClose();
 
-    const createWebsocket = () => {
-        const token = localStorage.getItem("token");
-        if (token && token !== "") {
-            ws = new WebSocket(`ws://localhost:8000/ws/chats/?token=${token}`);
-            ws?.addEventListener("open", onOpen);
-            ws?.addEventListener("message", onMessage);
-            ws?.addEventListener("close", onClose);
-        } else if (ws) {
-            ws?.close();
-        }
-    };
-    const unToken = Token.subscribe((t) => {
-        console.log("token changed", t);
-        createWebsocket();
+    // const createWebsocket = () => {
+    //     const token = localStorage.getItem("token");
+    //     if (token && token !== "") {
+    //         ws = new WebSocket(`ws://localhost:8000/ws/chats/?token=${token}`);
+    //         ws?.addEventListener("open", onOpen);
+    //         ws?.addEventListener("message", onMessage);
+    //         ws?.addEventListener("close", onClose);
+    //     } else if (ws) {
+    //         ws?.close();
+    //     }
+    // };
+    // const unToken = Token.subscribe((t) => {
+    //     console.log("token changed", t);
+    //     createWebsocket();
+    // });
+    websocket.subscribe((newWs) => {
+        ws = newWs;
+        ws?.addEventListener("open", onOpen);
+        ws?.addEventListener("message", onMessage);
     });
 
     onDestroy(() => {
-        unToken();
+        // unToken();
         unChatSelected();
     });
     $: console.log(messages);
