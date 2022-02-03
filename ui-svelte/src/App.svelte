@@ -11,17 +11,17 @@
 </script>
 
 <main>
-    {#if isAuth}
-        <button on:click={() => Token.signout()}>Logout</button>
-        <SideBar>
-            <Chats />
-        </SideBar>
-        <div class="pl-64">
+    <button on:click={() => Token.signout()}>Logout</button>
+    <SideBar>
+        <Chats />
+    </SideBar>
+    <div class="pl-64">
+        {#if isAuth}
             <Chat />
-        </div>
-    {:else}
-        <Login />
-    {/if}
+        {:else}
+            <Login />
+        {/if}
+    </div>
 </main>
 
 <style lang="postcss" global>
