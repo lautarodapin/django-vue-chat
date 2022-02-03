@@ -6,14 +6,7 @@
     import SideBar from "./components/SideBar.svelte";
     import { Token } from "./stores/token";
 
-    let token: string;
-    const unToken = Token.subscribe((t) => {
-        token = t;
-        console.log("token changed", t);
-    });
-    onDestroy(() => {
-        unToken();
-    });
+    $: token = $Token;
     $: isAuth = !!token;
 </script>
 
