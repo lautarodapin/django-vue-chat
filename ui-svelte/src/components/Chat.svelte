@@ -1,19 +1,23 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
-  import { onDestroy } from "svelte";
-
-  import { chatSelected } from "../stores/chat";
-  import { Token } from "../stores/token";
-  import { websocket } from "../stores/websocket";
-  import type { ChatDetail, MessageDetail, MessageList } from "../types";
-  import { formatDate, fromNow } from "../utils";
+  import type { MessageDetail, MessageList } from "../types";
+  import { fromNow } from "../utils";
+  import { useWebsocket } from "../hooks/userWebsocket";
 
   let input: string;
   let chat: string;
   let next: string;
   let messages: MessageDetail[] = [];
   let loading: boolean = false;
-  let ws: WebSocket | undefined;
+  let { ws, onMessage, onOpen } = useWebsocket({
+    callback: (message) => {
+      messages = [message, ...messages];
+    },
+    resetMessages: async (newChat) => {
+      messages = [];
+      await loadMessages(`http://localhost:8000/messages/?chat=${newChat}`);
+    },
+  });
 
   const loadMessages = async (
     url: string = `http://localhost:8000/messages/?chat=${chat}`
@@ -31,15 +35,6 @@
     next = data.next;
     loading = false;
   };
-  const unChatSelected = chatSelected.subscribe(async (newChat) => {
-    if (ws?.readyState === WebSocket.OPEN) unsubscribe();
-    chat = newChat;
-    if (!chat) return;
-    messages.splice(0, messages.length);
-    messages = messages;
-    await loadMessages(`http://localhost:8000/messages/?chat=${newChat}`);
-    if (ws?.readyState === WebSocket.OPEN) onOpen();
-  });
 
   const createMessage = async () => {
     await fetch(`http://localhost:8000/messages/`, {
@@ -56,47 +51,6 @@
     input = "";
   };
 
-  const onOpen = () => {
-    console.log("ws opened");
-    if (!chat) setTimeout(onOpen, 2000);
-    ws?.send(
-      JSON.stringify({
-        action: "subscribe_to_chat",
-        id: chat,
-        request_id: Math.random(),
-      })
-    );
-    console.log(chat);
-  };
-
-  const unsubscribe = () => {
-    console.log("unsubscribe", chat);
-    ws?.send(
-      JSON.stringify({
-        action: "unsubscribe_to_chat",
-        id: chat,
-        request_id: Math.random(),
-      })
-    );
-  };
-
-  const onMessage = (e: MessageEvent<any>) => {
-    const data: MessageDetail = JSON.parse(e.data);
-    console.log("ws message", data);
-    console.log("old messages", messages);
-    messages = [data, ...messages];
-  };
-
-  websocket.subscribe((newWs) => {
-    ws = newWs;
-    ws?.addEventListener("open", onOpen);
-    ws?.addEventListener("message", onMessage);
-  });
-
-  onDestroy(() => {
-    // unToken();
-    unChatSelected();
-  });
   $: console.log(messages);
 </script>
 
