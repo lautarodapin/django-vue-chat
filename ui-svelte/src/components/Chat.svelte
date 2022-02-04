@@ -2,13 +2,14 @@
   import { fade } from "svelte/transition";
   import type { MessageDetail, MessageList } from "../types";
   import { fromNow } from "../utils";
-  import { useWebsocket } from "../hooks/userWebsocket";
+  import { useWebsocket } from "../composables/use-websocket";
 
   let input: string;
   let chat: string;
   let next: string;
   let messages: MessageDetail[] = [];
   let loading: boolean = false;
+  let sendingMessage: boolean = false;
   let { ws, onMessage, onOpen } = useWebsocket({
     callback: (message) => {
       messages = [message, ...messages];
@@ -37,18 +38,25 @@
   };
 
   const createMessage = async () => {
-    await fetch(`http://localhost:8000/messages/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({
-        text: input,
-        chat: chat,
-      }),
-    });
-    input = "";
+    sendingMessage = true;
+    try {
+      const response = await fetch(`http://localhost:8000/messages/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          text: input,
+          chat: chat,
+        }),
+      });
+      if (response.ok) {
+        input = "";
+      }
+    } finally {
+      sendingMessage = false;
+    }
   };
 
   $: console.log(messages);
@@ -71,8 +79,13 @@
                     text-white
                     hover:bg-slate-400 hover:text-black
                 "
+        disabled={sendingMessage}
       >
-        Send
+        {#if !sendingMessage}
+          Send
+        {:else}
+          Sending . . .
+        {/if}
       </button>
     </form>
     <div class="overflow-y-scroll flex flex-col-reverse">
