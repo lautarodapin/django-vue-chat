@@ -1,98 +1,58 @@
 <script lang="ts">
+  import Message from "./messages/Message.svelte";
+  import Input from "./messages/Input.svelte";
   import { fade } from "svelte/transition";
   import type { MessageDetail, MessageList } from "../types";
-  import { fromNow } from "../utils";
   import { useWebsocket } from "../composables/use-websocket";
+  import { chatSelected } from "../stores/chat";
+  import { loadMessages } from "../composables/load-messages";
 
-  let input: string;
-  let chat: string;
+  $: chat = chatSelected;
   let next: string;
   let messages: MessageDetail[] = [];
   let loading: boolean = false;
-  let sendingMessage: boolean = false;
+  let loadingMoreMessages: boolean = false;
   let { ws, onMessage, onOpen } = useWebsocket({
     callback: (message) => {
       messages = [message, ...messages];
     },
     resetMessages: async (newChat) => {
       messages = [];
-      await loadMessages(`http://localhost:8000/messages/?chat=${newChat}`);
+      await loadMessages(
+        `http://localhost:8000/messages/?chat=${newChat}`,
+        load
+      );
+      //   await loadMessages(`http://localhost:8000/messages/?chat=${newChat}`);
     },
   });
 
-  const loadMessages = async (
-    url: string = `http://localhost:8000/messages/?chat=${chat}`
-  ) => {
-    loading = true;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${localStorage.getItem("token")}`,
-      },
-    });
-    const data: MessageList = await response.json();
-    messages = [...messages, ...data.results];
-    next = data.next;
-    loading = false;
-  };
-
-  const createMessage = async () => {
-    sendingMessage = true;
-    try {
-      const response = await fetch(`http://localhost:8000/messages/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          text: input,
-          chat: chat,
-        }),
-      });
-      if (response.ok) {
-        input = "";
-      }
-    } finally {
-      sendingMessage = false;
-    }
-  };
-
+  //   const loadMessages = async (
+  //     url: string = `http://localhost:8000/messages/?chat=${chat}`
+  //   ) => {
+  //     loading = true;
+  //     loadingMoreMessages = true;
+  //     const response = await fetch(url, {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Token ${localStorage.getItem("token")}`,
+  //       },
+  //     });
+  //     const data: MessageList = await response.json();
+  //     messages = [...messages, ...data.results];
+  //     next = data.next;
+  //     loading = false;
+  //     loadingMoreMessages = false;
+  //   };
   $: console.log(messages);
 </script>
 
 {#if !loading}
   <div transition:fade class="h-[95vh] flex flex-col-reverse">
-    <form class="flex" on:submit|preventDefault={(e) => createMessage()}>
-      <input
-        bind:value={input}
-        type="text"
-        class="bg-slate-200 rounded-md px-2 mr-2 grow"
-      />
-      <button
-        type="submit"
-        class="
-                    px-10
-                    rounded-md
-                    bg-slate-700
-                    text-white
-                    hover:bg-slate-400 hover:text-black
-                "
-        disabled={sendingMessage}
-      >
-        {#if !sendingMessage}
-          Send
-        {:else}
-          Sending . . .
-        {/if}
-      </button>
-    </form>
+    <Input />
     <div class="overflow-y-scroll flex flex-col-reverse">
-      {#each messages as { id, created_at, text, created_by: { first_name, last_name, username, email } }}
-        <div transition:fade>
-          {fromNow(created_at)} - {username}: {text}
-        </div>
+      {#each messages as message}
+        <Message {message} />
       {:else}
         No messages
       {/each}
@@ -107,8 +67,9 @@
                     hover:bg-slate-400 hover:text-black
                 "
         on:click={() => loadMessages(next)}
+        disabled={loadingMoreMessages}
       >
-        Load more
+        {#if !loadingMoreMessages}Load more{:else}Loading. . .{/if}
       </button>
     {/if}
   </div>
