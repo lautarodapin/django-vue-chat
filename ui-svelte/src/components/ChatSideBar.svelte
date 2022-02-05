@@ -2,7 +2,8 @@
     import { fade } from "svelte/transition";
     import { useWebsocket } from "../composables/use-websocket";
     import { chatSelected } from "../stores/chat";
-    import type { ChatDetail } from "../types";
+    import { websocket } from "../stores/websocket";
+    import { Actions, ChatDetail, MessageDetail } from "../types";
 
     export let chat: ChatDetail;
 
@@ -16,14 +17,23 @@
         );
         chatSelected.update(() => chat.id.toString());
     };
-
-    let { ws, onMessage, onOpen } = useWebsocket({
-        callback: (message) => {
-            if (message.chat !== chat.id) return;
-            chat.last_message = message;
-            chat = chat;
-        },
-    });
+    $: {
+        $websocket?.addEventListener("open", () => {
+            console.log("chat side bar open", chat.id);
+            $websocket?.send(
+                JSON.stringify({
+                    action: Actions.SubscribeToChat,
+                    id: chat.id,
+                    request_id: Math.random(),
+                })
+            );
+        });
+        $websocket?.addEventListener("message", (e) => {
+            const data: MessageDetail = JSON.parse(e.data);
+            if (data.chat !== chat.id) return;
+            chat.last_message = data;
+        });
+    }
 </script>
 
 <div
