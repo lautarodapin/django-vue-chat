@@ -4,7 +4,7 @@ import {websocket} from '../stores/websocket'
 
 type Props = {
     callback: (data: MessageDetail) => void
-    resetMessages: (chat: string) => void | Promise<void>
+    resetMessages?: (chat: string) => void | Promise<void>
 }
 
 export const useWebsocket = ({callback, resetMessages}: Props) => {
@@ -16,7 +16,7 @@ export const useWebsocket = ({callback, resetMessages}: Props) => {
         if (ws?.readyState === WebSocket.OPEN) unsubscribe(chat)
         chat = newChat
         if (!chat) return
-        await resetMessages(newChat)
+        if (resetMessages) await resetMessages(newChat)
         if (ws?.readyState === WebSocket.OPEN) onOpen()
     })
 
