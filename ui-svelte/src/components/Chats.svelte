@@ -1,6 +1,5 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
-    import { onDestroy } from "svelte";
     import { chatSelected as chatStore } from "../stores/chat";
 
     import type { ChatDetail, ChatList } from "../types";
@@ -32,10 +31,8 @@
         chatStore.update(() => chat.id.toString());
     };
 
-    let selectedChat: string;
+    $: selectedChat = $chatStore;
     let chatsPromise = getChats();
-    const unSub = chatStore.subscribe((v) => (selectedChat = v));
-    onDestroy(unSub);
 </script>
 
 {#await chatsPromise}
