@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Token } from "../stores/token";
     import { fade } from "svelte/transition";
+    import LogoutIcon from "./icons/LogoutIcon.svelte";
     $: isAuth = !!$Token;
 </script>
 
@@ -18,8 +19,11 @@
         >
             <button
                 class="rounded-md bg-slate-600 border-slate-600 text-white hover:bg-slate-400 hover:text-black w-40 hover:border-slate-400"
-                on:click={Token.signout}>Logout</button
+                on:click={Token.signout}
             >
+                Logout
+            </button>
+            <LogoutIcon />
         </div>
     {/if}
 </nav>
