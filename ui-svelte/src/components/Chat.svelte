@@ -34,6 +34,7 @@
     };
     let { ws, onMessage, onOpen } = useWebsocket({
         callback: (message) => {
+            if (message.chat !== parseInt($chat)) return;
             messages = [message, ...messages];
         },
         resetMessages: async (newChat) => {
