@@ -10,6 +10,7 @@ type Props = {
 export const useWebsocket = ({callback, resetMessages}: Props) => {
     let chat: string
     let ws: WebSocket | undefined
+    let openTimer
 
     chatSelected.subscribe(async (newChat) => {
         if (ws?.readyState === WebSocket.OPEN) unsubscribe(chat)
@@ -41,7 +42,8 @@ export const useWebsocket = ({callback, resetMessages}: Props) => {
 
     const onOpen = () => {
         console.log("ws opened")
-        if (!chat) setTimeout(onOpen, 2000)
+        if (!chat) return openTimer = setTimeout(onOpen, 2000)
+        clearTimeout(openTimer)
         ws?.send(
             JSON.stringify({
                 action: "subscribe_to_chat",
