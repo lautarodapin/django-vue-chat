@@ -1,8 +1,9 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
+    import { useWebsocket } from "../composables/use-websocket";
     import { chatSelected as chatStore } from "../stores/chat";
-
     import type { ChatDetail, ChatList } from "../types";
+    import ChatSideBar from "./ChatSideBar.svelte";
     import GrowingSpinner from "./GrowingSpinner.svelte";
 
     const getChats = async () => {
@@ -41,17 +42,6 @@
     </div>
 {:then chats}
     {#each chats as chat}
-        <div
-            transition:fade
-            on:click={() => handleClick(chat)}
-            class="bg-slate-800 py-8 px-2 hover:bg-slate-300 hover:cursor-pointer"
-            class:bg-slate-500={Number(selectedChat) === chat.id}
-        >
-            {chat.id}
-            {#if chat.last_message && chat.last_message.created_by}
-                {chat.last_message?.created_by?.username}: {chat.last_message
-                    ?.text}
-            {/if}
-        </div>
+        <ChatSideBar {chat} />
     {/each}
 {/await}
