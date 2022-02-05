@@ -33,7 +33,7 @@
     <input
         bind:value={input}
         type="text"
-        class="bg-slate-200 rounded-md px-2 mr-2 grow"
+        class="bg-slate-200 border-slate-400 rounded-md mr-2 grow focus:border-slate-700 border-[.12rem] focus:border-[.2rem] px-2 py-1"
     />
     <button
         type="submit"
