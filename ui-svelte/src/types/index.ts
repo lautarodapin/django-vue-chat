@@ -1,3 +1,8 @@
+export enum Actions {
+    SubscribeToChat = "subscribe_to_chat",
+    UnsubscribeToChat = "unsubscribe_to_chat",
+}
+
 export type Pagination<T> = {
     count: number
     next?: string | null

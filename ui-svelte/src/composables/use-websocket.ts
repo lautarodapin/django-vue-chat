@@ -1,6 +1,7 @@
 import {chatSelected} from "../stores/chat"
 import type {MessageDetail} from "../types/index"
 import {websocket} from '../stores/websocket'
+import {Actions} from '../types'
 
 type Props = {
     callback: (data: MessageDetail) => void
@@ -25,7 +26,7 @@ export const useWebsocket = ({callback, resetMessages}: Props) => {
         console.log("unsubscribe", chat)
         ws?.send(
             JSON.stringify({
-                action: "unsubscribe_to_chat",
+                action: Actions.UnsubscribeToChat,
                 id: chat,
                 request_id: Math.random(),
             })
@@ -46,7 +47,7 @@ export const useWebsocket = ({callback, resetMessages}: Props) => {
         clearTimeout(openTimer)
         ws?.send(
             JSON.stringify({
-                action: "subscribe_to_chat",
+                action: Actions.SubscribeToChat,
                 id: chat,
                 request_id: Math.random(),
             })
