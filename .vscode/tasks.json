@@ -9,6 +9,13 @@
             "problemMatcher": [],
             "label": "npm: dev - ui-svelte",
             "detail": "rollup -c"
-        }
+        },
+        {
+            "type": "shell",
+            "command": "./venv/bin/python3 ./backend/manage.py runserver",
+            "label": "Django",
+            "group": "none",
+            "problemMatcher": [],
+        },
     ]
 }
