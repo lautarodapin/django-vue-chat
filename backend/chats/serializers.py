@@ -25,7 +25,7 @@ class ChatSerializer(serializers.ModelSerializer):
         ]
 
     def get_last_message(self, obj: Chat):
-        return MessageSerializer(obj.messages.last()).data
+        return MessageSerializer(obj.messages.first()).data
 
 class MinimalChatSerializer(serializers.ModelSerializer):
     class Meta:
