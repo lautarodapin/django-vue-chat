@@ -20,6 +20,7 @@ export type ChatDetail = {
     users: number[]
     active_users: UserDetail[]
     last_message?: MessageDetail | null
+    unread_count: number
 }
 
 export type ChatList = Pagination<ChatDetail>
@@ -40,6 +41,7 @@ export type MessageDetail = {
     created_by?: UserDetail | null
     created_at: string
     mod_at: string
+    read: boolean
 }
 
 export type MessageList = Pagination<MessageDetail>
