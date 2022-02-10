@@ -18,12 +18,13 @@
             class="absolute bottom-4 flex w-60 h-12 justify-center"
         >
             <button
-                class="rounded-md bg-slate-600 border-slate-600 text-white hover:bg-slate-400 hover:text-black w-40 hover:border-slate-400"
+                class="rounded-md bg-slate-600 border-slate-600 text-white hover:bg-slate-400 hover:text-black w-40 hover:border-slate-400 grid-cols-2
+                inline-flex justify-center items-center gap-3"
                 on:click={Token.signout}
             >
                 Logout
+                <LogoutIcon />
             </button>
-            <LogoutIcon />
         </div>
     {/if}
 </nav>

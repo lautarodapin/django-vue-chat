@@ -6,6 +6,7 @@ const token = () => {
         subscribe,
         signout: () => {
             localStorage.removeItem('token')
+            history.pushState(null, "", window.location.pathname)
             set('')
         },
         signin: (token: string) => {
