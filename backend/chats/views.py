@@ -9,7 +9,7 @@ from .serializers import MinimalChatSerializer, ChatSerializer, MessageSerialize
 class ChatViewSet(ModelViewSet):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     @action(methods=['POST'], detail=True, url_path='join-chat', permission_classes=[IsAuthenticated])
     def join_chat(self, request, **kwargs):
@@ -29,5 +29,6 @@ class MessageViewSet(ModelViewSet):
     filterset_fields = ['chat']
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+    def perform_create(self, serializer: MessageSerializer):
+        instance: Message = serializer.save(created_by=self.request.user)
+        Message.objects.filter(chat=instance.chat).exclude(created_by=self.request.user).update(read=True)
