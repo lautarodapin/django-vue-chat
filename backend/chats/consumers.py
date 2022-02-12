@@ -1,5 +1,5 @@
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
-from djangochannelsrestframework.mixins import ListModelMixin
+from djangochannelsrestframework.mixins import ListModelMixin, CreateModelMixin
 from djangochannelsrestframework.decorators import action
 from djangochannelsrestframework.observer import model_observer
 from djangochannelsrestframework.permissions import IsAuthenticated
@@ -7,11 +7,15 @@ from .models import User, Chat, Message
 from .serializers import UserSerializer, ChatSerializer, MessageSerializer
 
 class ChatConsumer(
+    ListModelMixin,
     GenericAsyncAPIConsumer,
 ):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self, **kwargs):
+        return super().get_queryset(**kwargs).filter(users=self.scope['user']).distinct()
 
     @model_observer(Message)
     async def message_activity(self, message, observer=None, **kwargs):
@@ -39,3 +43,20 @@ class ChatConsumer(
     @action()
     async def unsubscribe_to_chat(self, id, **kwargs):
         await self.message_activity.unsubscribe(id=id)
+        
+
+class MessageConsumer(
+    CreateModelMixin,
+    ListModelMixin,
+    GenericAsyncAPIConsumer,
+):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def filter_queryset(self, queryset, filters=None, **kwargs):
+        return queryset.filter(**filters) if filters else queryset
+
+    def perform_create(self, serializer, **kwargs):
+        instance: Message = serializer.save(created_by=self.scope['user'])
+        Message.objects.filter(chat=instance.chat).exclude(created_by=self.scope['user']).update(read=True)

@@ -24,11 +24,14 @@ from .middlewares import TokenAuthMiddleware
 
 from users.consumers import UserConsumer
 from chats.consumers import ChatConsumer
+from .consumers import DemultiplexerConsumer
+
 
 application = ProtocolTypeRouter({
     'websocket': AllowedHostsOriginValidator(
         TokenAuthMiddleware(
             URLRouter([
+                re_path(r'^ws/$', DemultiplexerConsumer.as_asgi()),
                 re_path(r'^ws/users/$', UserConsumer.as_asgi()),
                 re_path(r'^ws/chats/$', ChatConsumer.as_asgi()),
             ])
