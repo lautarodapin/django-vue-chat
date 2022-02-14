@@ -1,30 +1,52 @@
 <script lang="ts">
     import { chatSelected } from "../../stores/chat";
+    import { websocket } from "../../stores/websocket";
+    import {
+        Actions,
+        MessageDetail,
+        Streams,
+        WebsocketData,
+    } from "../../types";
 
     let sendingMessage = false;
     let input: string = "";
+    let request_id: number = Math.random();
     $: chat = $chatSelected;
+
+    $: {
+        $websocket?.addEventListener("message", (e) => {
+            const {
+                stream,
+                payload: { action, request_id: id },
+            }: WebsocketData<MessageDetail> = JSON.parse(e.data);
+
+            if (
+                stream === Streams.Messages &&
+                action === Actions.Create &&
+                request_id === id
+            ) {
+                input = "";
+                request_id = Math.random();
+                sendingMessage = false;
+            }
+        });
+    }
 
     const createMessage = async () => {
         sendingMessage = true;
-        try {
-            const response = await fetch(`http://localhost:8000/messages/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Token ${localStorage.getItem("token")}`,
+        $websocket.send(
+            JSON.stringify({
+                stream: Streams.Messages,
+                payload: {
+                    action: Actions.Create,
+                    request_id,
+                    data: {
+                        text: input,
+                        chat: chat,
+                    },
                 },
-                body: JSON.stringify({
-                    text: input,
-                    chat: chat,
-                }),
-            });
-            if (response.ok) {
-                input = "";
-            }
-        } finally {
-            sendingMessage = false;
-        }
+            })
+        );
     };
     $: console.log("input", chat);
 </script>
