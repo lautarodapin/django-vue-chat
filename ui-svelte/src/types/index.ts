@@ -1,6 +1,25 @@
 export enum Actions {
     SubscribeToChat = "subscribe_to_chat",
     UnsubscribeToChat = "unsubscribe_to_chat",
+    Create = "create",
+    List = "list"
+}
+
+export enum Streams {
+    Chats = "chats",
+    Messages = "messages",
+    Users = "users",
+}
+
+export type WebsocketData<T> = {
+    stream: Streams
+    payload: {
+        action: Actions
+        request_id: number
+        response_status: number
+        errors: any[]
+        data: T
+    }
 }
 
 export type Pagination<T> = {

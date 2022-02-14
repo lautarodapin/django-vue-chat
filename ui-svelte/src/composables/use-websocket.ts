@@ -1,14 +1,15 @@
-import {chatSelected} from "../stores/chat"
-import type {MessageDetail} from "../types/index"
-import {websocket} from '../stores/websocket'
-import {Actions} from '../types'
+import { chatSelected } from "../stores/chat"
+import type { MessageDetail, WebsocketData } from "../types/index"
+import { websocket } from '../stores/websocket'
+import { Actions } from '../types'
+import { Streams, ChatDetail } from '../types/index';
 
-type Props = {
-    callback: (data: MessageDetail) => void
+type Props<T> = {
+    callback: (data: WebsocketData<T>) => void
     resetMessages?: (chat: string) => void | Promise<void>
 }
 
-export const useWebsocket = ({callback, resetMessages}: Props) => {
+export const useWebsocket = <T>({ callback, resetMessages }: Props<T>) => {
     let chat: string
     let ws: WebSocket | undefined
     let openTimer
@@ -26,16 +27,19 @@ export const useWebsocket = ({callback, resetMessages}: Props) => {
         console.log("unsubscribe", chat)
         ws?.send(
             JSON.stringify({
-                action: Actions.UnsubscribeToChat,
-                id: chat,
-                request_id: Math.random(),
+                stream: Streams.Chats,
+                payload: {
+                    action: Actions.UnsubscribeToChat,
+                    id: chat,
+                    request_id: Math.random(),
+                },
             })
         )
     }
 
 
     const onMessage = (e: MessageEvent<any>) => {
-        const data: MessageDetail = JSON.parse(e.data)
+        const data = JSON.parse(e.data)
         console.log("ws message", data)
         callback(data)
 
@@ -47,9 +51,13 @@ export const useWebsocket = ({callback, resetMessages}: Props) => {
         clearTimeout(openTimer)
         ws?.send(
             JSON.stringify({
-                action: Actions.SubscribeToChat,
-                id: chat,
-                request_id: Math.random(),
+                stream: Streams.Chats,
+                payload: {
+
+                    action: Actions.SubscribeToChat,
+                    id: chat,
+                    request_id: Math.random(),
+                },
             })
         )
         console.log(chat)
@@ -62,5 +70,5 @@ export const useWebsocket = ({callback, resetMessages}: Props) => {
         ws?.addEventListener("message", onMessage)
     })
 
-    return {ws, onOpen, onMessage}
+    return { ws, onOpen, onMessage }
 }

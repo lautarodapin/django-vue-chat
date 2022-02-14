@@ -26,17 +26,14 @@ class ChatSerializer(serializers.ModelSerializer):
             'unread_count',
         ]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.user = self.context['request'].user
-
     def get_last_message(self, obj: Chat):
         return MessageSerializer(obj.messages.first()).data
 
     def get_unread_count(self, obj: Chat) -> int:
+        return 0
         return (
             obj.messages.filter(read=False)
-            .exclude(created_by=self.user)
+            .exclude(created_by=self.context['request'].user)
             .count()
         )
 

@@ -14,13 +14,14 @@ class ChatConsumer(
     serializer_class = ChatSerializer
     permission_classes = [IsAuthenticated]
     
-    def get_queryset(self, **kwargs):
-        return super().get_queryset(**kwargs).filter(users=self.scope['user']).distinct()
+    # FIXME: no todos los chats tienen usuarios aun
+    # def get_queryset(self, **kwargs):
+    #     return super().get_queryset(**kwargs).filter(users__in=[self.scope['user']]).distinct()
 
     @model_observer(Message)
-    async def message_activity(self, message, observer=None, **kwargs):
-        print('message_activity', message)
-        await self.send_json(message)
+    async def message_activity(self, message, action=None, observer=None, **kwargs):
+        print('message_activity', message, kwargs)
+        await self.send_json(dict(data=message, action=action))
 
     @message_activity.serializer
     def chat_activity(self, instance: Message, action, **kwargs):
