@@ -6,6 +6,7 @@
     import { useWebsocket } from "../composables/use-websocket";
     import { chatSelected } from "../stores/chat";
     import { loadMessages } from "../composables/load-messages";
+    import { websocket } from "../stores/websocket";
 
     $: chat = chatSelected;
     let next: string;
@@ -13,42 +14,61 @@
     let loading: boolean = false;
     let loadingMoreMessages: boolean = false;
 
-    const load = async (
-        url: string = `http://localhost:8000/messages/?chat=${chat}`
-    ) => {
-        await loadMessages(
-            url,
-            (load) => {
-                console.log("loading", load);
-                loading = load;
-                loadingMoreMessages = load;
-            },
-            (data) => {
-                console.log("data", data);
-                console.log("old messages", messages);
-                messages = [...messages, ...data.results];
-                console.log("new messages", messages);
-                next = data.next;
-            }
-        );
-    };
-    let { ws, onMessage, onOpen } = useWebsocket({
-        callback: (data) => {
-            if (
-                data.stream !== Streams.Chats ||
-                data.payload.action !== Actions.Create
-            )
-                return;
-            const message = data.payload.data as MessageDetail;
-            console.log("message", message);
-            if (message.chat !== parseInt($chat)) return;
-            messages = [message, ...messages];
-        },
-        resetMessages: async (newChat) => {
-            messages = [];
-            await load(`http://localhost:8000/messages/?chat=${newChat}`);
-        },
-    });
+    // const load = async (
+    //     url: string = `http://localhost:8000/messages/?chat=${chat}`
+    // ) => {
+    //     await loadMessages(
+    //         url,
+    //         (load) => {
+    //             console.log("loading", load);
+    //             loading = load;
+    //             loadingMoreMessages = load;
+    //         },
+    //         (data) => {
+    //             console.log("data", data);
+    //             console.log("old messages", messages);
+    //             messages = [...messages, ...data.results];
+    //             console.log("new messages", messages);
+    //             next = data.next;
+    //         }
+    //     );
+    // };
+    // let { ws, onMessage, onOpen } = useWebsocket({
+    //     callback: (data) => {
+    //         if (
+    //             data.stream !== Streams.Chats ||
+    //             data.payload.action !== Actions.Create
+    //         )
+    //             return;
+    //         const message = data.payload.data as MessageDetail;
+    //         console.log("message", message);
+    //         if (message.chat !== parseInt($chat)) return;
+    //         messages = [message, ...messages];
+    //     },
+    //     resetMessages: async (newChat) => {
+    //         messages = [];
+    //         await load(`http://localhost:8000/messages/?chat=${newChat}`);
+    //     },
+    // });
+    let load_request_id: number;
+
+    $: {
+        $websocket?.addEventListener("open", () => {
+            console.log("open chat ", $chat);
+            load_request_id = Math.random();
+            $websocket?.send(
+                JSON.stringify({
+                    stream: Streams.Chats,
+                    payload: {
+                        action: Actions.SubscribeToChat,
+                        id: $chat,
+                        request_id: load_request_id,
+                    },
+                })
+            );
+        });
+        $websocket?.onmessage();
+    }
 
     $: console.log(messages);
 </script>
