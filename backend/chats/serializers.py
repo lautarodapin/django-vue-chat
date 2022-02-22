@@ -9,7 +9,6 @@ class ChatSerializer(serializers.ModelSerializer):
     users = PrimaryKeyRelatedField(queryset=User.objects.all(), many=True)
     active_users = UserSerializer(read_only=True, many=True)
     last_message = serializers.SerializerMethodField()
-    unread_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Chat
@@ -23,19 +22,10 @@ class ChatSerializer(serializers.ModelSerializer):
             'users',
             'active_users',
             'last_message',
-            'unread_count',
         ]
 
     def get_last_message(self, obj: Chat):
         return MessageSerializer(obj.messages.first()).data
-
-    def get_unread_count(self, obj: Chat) -> int:
-        return 0
-        return (
-            obj.messages.filter(read=False)
-            .exclude(created_by=self.context['request'].user)
-            .count()
-        )
 
 
 class MinimalChatSerializer(serializers.ModelSerializer):
