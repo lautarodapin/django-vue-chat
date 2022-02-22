@@ -1,6 +1,10 @@
-import {writable} from 'svelte/store'
 
-const token = () => {
+import {writable} from 'svelte/store'
+import type {ChatDetail, MessageDetail} from '../types'
+
+const search = new URLSearchParams(window.location.search)
+export const chatSelected = writable<string>(search.get('chat') || null)
+export const Token = (() => {
     const {subscribe, set} = writable(localStorage.getItem('token') || '')
     return {
         subscribe,
@@ -14,6 +18,6 @@ const token = () => {
             set(token)
         },
     }
-}
-
-export const Token = token()
+})()
+export const messages = writable<MessageDetail[]>([])
+export const chats = writable<ChatDetail[]>([])
