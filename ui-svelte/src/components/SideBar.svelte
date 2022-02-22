@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { Token } from "../stores/token";
     import { fade } from "svelte/transition";
+    import { Token } from "../stores";
     import LogoutIcon from "./icons/LogoutIcon.svelte";
     $: isAuth = !!$Token;
 </script>

@@ -9,5 +9,5 @@
 
 <div transition:fade>
     <!-- {fromNow(created_at)} - {username}: {text} -->
-    {fromNow(message?.created_at)} - {message?.created_by.username}: {message.text}
+    {fromNow(message?.created_at)} - {message?.created_by?.username}: {message.text}
 </div>

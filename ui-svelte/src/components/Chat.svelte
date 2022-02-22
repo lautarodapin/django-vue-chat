@@ -2,103 +2,80 @@
     import Message from "./messages/Message.svelte";
     import Input from "./messages/Input.svelte";
     import { fade } from "svelte/transition";
-    import { Actions, MessageDetail, Streams } from "../types";
-    import { useWebsocket } from "../composables/use-websocket";
-    import { chatSelected } from "../stores/chat";
-    import { loadMessages } from "../composables/load-messages";
-    import { websocket } from "../stores/websocket";
+    import { chatSelected, messages } from "../stores";
+    import { Actions, MessageDetail, Streams, WebsocketData } from "../types";
+    import { getContext, onDestroy, onMount } from "svelte";
 
-    $: chat = chatSelected;
-    let next: string;
-    let messages: MessageDetail[] = [];
-    let loading: boolean = false;
-    let loadingMoreMessages: boolean = false;
+    const websocket = getContext<WebSocket>("websocket");
+    let timeout;
 
-    // const load = async (
-    //     url: string = `http://localhost:8000/messages/?chat=${chat}`
-    // ) => {
-    //     await loadMessages(
-    //         url,
-    //         (load) => {
-    //             console.log("loading", load);
-    //             loading = load;
-    //             loadingMoreMessages = load;
-    //         },
-    //         (data) => {
-    //             console.log("data", data);
-    //             console.log("old messages", messages);
-    //             messages = [...messages, ...data.results];
-    //             console.log("new messages", messages);
-    //             next = data.next;
-    //         }
-    //     );
-    // };
-    // let { ws, onMessage, onOpen } = useWebsocket({
-    //     callback: (data) => {
-    //         if (
-    //             data.stream !== Streams.Chats ||
-    //             data.payload.action !== Actions.Create
-    //         )
-    //             return;
-    //         const message = data.payload.data as MessageDetail;
-    //         console.log("message", message);
-    //         if (message.chat !== parseInt($chat)) return;
-    //         messages = [message, ...messages];
-    //     },
-    //     resetMessages: async (newChat) => {
-    //         messages = [];
-    //         await load(`http://localhost:8000/messages/?chat=${newChat}`);
-    //     },
-    // });
-    let load_request_id: number;
-
-    $: {
-        $websocket?.addEventListener("open", () => {
-            console.log("open chat ", $chat);
-            load_request_id = Math.random();
-            $websocket?.send(
-                JSON.stringify({
-                    stream: Streams.Chats,
-                    payload: {
-                        action: Actions.SubscribeToChat,
-                        id: $chat,
-                        request_id: load_request_id,
+    const listenMessages = (e: MessageEvent) => {
+        const {
+            stream,
+            payload: { action, request_id, data },
+        }: WebsocketData<MessageDetail[]> = JSON.parse(e.data);
+        if (stream === Streams.Messages && action === Actions.List) {
+            messages.set(data);
+        }
+    };
+    const listenMessage = (e: MessageEvent) => {
+        const {
+            stream,
+            payload: { action, data },
+        }: WebsocketData<MessageDetail> = JSON.parse(e.data);
+        if (
+            stream === Streams.Chats &&
+            action === Actions.Create &&
+            data.chat === +$chatSelected
+        ) {
+            messages.update((prev) => [data, ...prev]);
+        }
+    };
+    const loadMessages = (chat: string) => {
+        if (timeout) clearTimeout(timeout);
+        websocket.send(
+            JSON.stringify({
+                stream: Streams.Messages,
+                payload: {
+                    action: Actions.List,
+                    filters: {
+                        chat__id: chat,
                     },
-                })
-            );
-        });
-        $websocket?.onmessage();
-    }
+                    request_id: Date.now(),
+                },
+            })
+        );
+    };
 
-    $: console.log(messages);
+    const unSubChat = chatSelected.subscribe((newChat) => {
+        if (!newChat) return;
+        if (websocket.readyState === WebSocket.OPEN) loadMessages(newChat);
+        else setTimeout(() => loadMessages(newChat), 1000);
+    });
+    onMount(() => {
+        if (websocket.readyState === WebSocket.OPEN)
+            loadMessages($chatSelected);
+        else setTimeout(() => loadMessages($chatSelected), 1000);
+        websocket.addEventListener("message", listenMessages);
+        websocket.addEventListener("message", listenMessage);
+        return () => {
+            websocket.removeEventListener("message", listenMessages);
+            websocket.removeEventListener("message", listenMessage);
+        };
+    });
+    onDestroy(() => {
+        unSubChat();
+    });
+    $: console.log("Chat", $messages);
 </script>
 
-{#if !loading}
-    <div transition:fade class="h-[95vh] flex flex-col-reverse">
-        <Input />
-        <div class="overflow-y-scroll flex flex-col-reverse">
-            {#each messages as message}
-                <Message {message} />
-            {:else}
-                No messages
-            {/each}
-        </div>
-        {#if next}
-            <button
-                class="
-                    px-10
-                    rounded-md
-                    bg-slate-700
-                    text-white
-                    hover:bg-slate-400 hover:text-black
-                "
-                on:click={() => load(next)}
-                disabled={loadingMoreMessages}
-            >
-                {#if !loadingMoreMessages}Load more{:else}Loading. . .{/if}
-            </button>
-        {/if}
+<div transition:fade class="h-[95vh] flex flex-col-reverse">
+    <Input />
+    <div class="overflow-y-scroll flex flex-col-reverse">
+        {#each $messages as message}
+            <Message {message} />
+        {:else}
+            No messages
+        {/each}
     </div>
-{:else}
-    Loading...
-{/if}
+</div>
