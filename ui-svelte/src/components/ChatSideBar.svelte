@@ -35,6 +35,7 @@
     };
 
     const listenMessage = (e: MessageEvent) => {
+        // TODO chequear que lo hace dos veces
         const {
             stream,
             payload: { action, data },
@@ -46,7 +47,12 @@
         ) {
             chats.update((prev) =>
                 prev.reduce<typeof prev>((acc, curr) => {
-                    if (curr.id === data.chat) curr.last_message = data;
+                    if (!curr.hasOwnProperty("unread_count"))
+                        curr.unread_count = 0;
+                    if (curr.id === data.chat) {
+                        curr.last_message = data;
+                        curr.unread_count += 1;
+                    }
                     acc.push(curr);
                     return acc;
                 }, [])
