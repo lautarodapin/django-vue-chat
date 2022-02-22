@@ -9,3 +9,8 @@ class DemultiplexerConsumer(AsyncJsonWebsocketDemultiplexer):
         'users': UserConsumer.as_asgi(),
         'messages': MessageConsumer.as_asgi(),
     }
+
+    async def receive_json(self, content, **kwargs):
+        print(content)
+        return await super().receive_json(content, **kwargs)
+
