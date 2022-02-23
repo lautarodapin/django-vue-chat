@@ -35,7 +35,7 @@
     };
 
     const listenMessage = (e: MessageEvent) => {
-        // TODO chequear que lo hace dos veces
+        // TODO mover este listener a un componente de más arriba, sino se repite dos veces 
         const {
             stream,
             payload: { action, data },
