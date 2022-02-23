@@ -7,6 +7,7 @@
     import { getContext, onDestroy, onMount } from "svelte";
     import type { Writable } from "svelte/store";
 
+    let loading = true;
     const ws = getContext<Writable<WebSocket>>("websocket");
     $: websocket = $ws;
     let timeout;
@@ -18,6 +19,7 @@
         }: WebsocketData<MessageDetail[]> = JSON.parse(e.data);
         if (stream === Streams.Messages && action === Actions.List) {
             messages.set(data);
+            loading = false;
         }
     };
     const listenMessage = (e: MessageEvent) => {
@@ -34,6 +36,7 @@
         }
     };
     const loadMessages = (chat: string) => {
+        loading = true;
         if (timeout) clearTimeout(timeout);
         websocket.send(
             JSON.stringify({
@@ -76,13 +79,19 @@
     $: console.log("Chat", $messages);
 </script>
 
-<div transition:fade class="h-[95vh] flex flex-col-reverse">
-    <Input />
-    <div class="overflow-y-scroll flex flex-col-reverse">
-        {#each $messages as message}
-            <Message {message} />
-        {:else}
-            No messages
-        {/each}
+{#if !loading}
+    <div transition:fade class="h-[95vh] flex flex-col-reverse">
+        <Input />
+        <div class="overflow-y-scroll flex flex-col-reverse">
+            {#each $messages as message}
+                <Message {message} />
+            {:else}
+                No messages
+            {/each}
+        </div>
     </div>
-</div>
+{:else}
+    <div transition:fade class="h-[95vh] flex justify-center">
+        <div class="flex self-center">Loading...</div>
+    </div>
+{/if}
