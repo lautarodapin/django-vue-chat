@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
-    import { chats, messages, Token } from "../stores";
+    import { chats, messages, Token, user } from "../stores";
     import LogoutIcon from "./icons/LogoutIcon.svelte";
     $: isAuth = !!$Token;
 
@@ -9,6 +9,7 @@
     const logout = () => {
         messages.set([]);
         chats.set([]);
+        user.set(undefined);
         Token.signout();
     };
 </script>
@@ -17,6 +18,11 @@
     <div>
         <h3 class="text-center my-8">{title}</h3>
     </div>
+    {#if $user}
+        <div>
+            {$user?.username}
+        </div>
+    {/if}
     {#if isAuth}
         <slot><!-- optional fallback --></slot>
     {/if}

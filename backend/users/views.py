@@ -13,6 +13,11 @@ class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
+    @action(methods=['post'], detail=False, permission_classes=[IsAuthenticated])
+    def current(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
     @action(methods=['post'], detail=False, serializer_class=RegisterSerializer, permission_classes=[AllowAny])
     def register(self, request, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -26,4 +31,4 @@ class UserViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key})
+        return Response({'token': token.key, **UserSerializer(instance=user).data}, status=status.HTTP_200_OK)

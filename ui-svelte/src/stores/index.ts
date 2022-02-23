@@ -1,6 +1,6 @@
 
 import {writable} from 'svelte/store'
-import type {ChatDetail, MessageDetail} from '../types'
+import type {ChatDetail, MessageDetail, UserDetail} from '../types'
 
 const search = new URLSearchParams(window.location.search)
 export const chatSelected = writable<string>(search.get('chat') || null)
@@ -21,3 +21,4 @@ export const Token = (() => {
 })()
 export const messages = writable<MessageDetail[]>([])
 export const chats = writable<ChatDetail[]>([])
+export const user = writable<Omit<UserDetail, 'auth_token'> | undefined>()

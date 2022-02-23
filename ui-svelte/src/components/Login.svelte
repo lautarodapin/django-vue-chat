@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
-    import { Token } from "../stores";
+    import { Token, user } from "../stores";
 
     import { formatDate } from "../utils/index";
 
@@ -21,8 +21,9 @@
         console.log(response.ok);
 
         if (response.ok) {
-            const { token } = data;
+            const { token, ...currentUser } = data;
             Token.signin(token);
+            user.set(currentUser);
         } else {
             errors = {
                 formErrors: data.non_field_errors?.join(", "),

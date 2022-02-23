@@ -5,7 +5,7 @@
     import Chats from "./components/Chats.svelte";
     import Login from "./components/Login.svelte";
     import SideBar from "./components/SideBar.svelte";
-    import { chatSelected, Token } from "./stores";
+    import { chatSelected, Token, user } from "./stores";
 
     $: token = $Token;
     $: isAuth = !!token;
@@ -24,6 +24,21 @@
         websocket.set(
             new WebSocket(`ws://localhost:8000/ws/?token=${token || ""}`)
         );
+    });
+
+    onMount(() => {
+        if (!token) return;
+        fetch("http://localhost:8000/users/current/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Token ${token}`,
+            },
+        })
+            .then((r) => r.json())
+            .then((data) => {
+                user.set(data);
+            });
     });
 
     setContext("websocket", websocket);
