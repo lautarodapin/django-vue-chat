@@ -5,7 +5,7 @@
     import Chats from "./components/Chats.svelte";
     import Login from "./components/Login.svelte";
     import SideBar from "./components/SideBar.svelte";
-    import { Token } from "./stores";
+    import { chatSelected, Token } from "./stores";
 
     $: token = $Token;
     $: isAuth = !!token;
@@ -37,7 +37,15 @@
     </SideBar>
     <div class="pl-64">
         {#if isAuth}
-            <Chat />
+            {#if $chatSelected}
+                <Chat />
+            {:else}
+                <div
+                    class="h-[95vh] flex justify-center text-4xl text-slate-600"
+                >
+                    Seleccione un chat
+                </div>
+            {/if}
         {:else}
             <Login />
         {/if}
