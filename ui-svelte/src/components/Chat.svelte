@@ -92,6 +92,6 @@
     </div>
 {:else}
     <div transition:fade class="h-[95vh] flex justify-center">
-        <div class="flex self-center">Loading...</div>
+        <div class="flex self-center font-mono">Loading...</div>
     </div>
 {/if}

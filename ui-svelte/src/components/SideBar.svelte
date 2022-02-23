@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
     import { chats, messages, Token, user } from "../stores";
+    import Divider from "./Divider.svelte";
     import LogoutIcon from "./icons/LogoutIcon.svelte";
     $: isAuth = !!$Token;
 
@@ -16,13 +17,14 @@
 
 <nav class="fixed bg-slate-900 text-white top-0 left-0 h-screen w-64">
     <div>
-        <h3 class="text-center my-8">{title}</h3>
+        <h3 class="font-mono text-center my-8">{title}</h3>
     </div>
     {#if $user}
-        <div>
+        <div class="capitalize flex justify-center w-full font-mono">
             {$user?.username}
         </div>
     {/if}
+    <Divider />
     {#if isAuth}
         <slot><!-- optional fallback --></slot>
     {/if}
