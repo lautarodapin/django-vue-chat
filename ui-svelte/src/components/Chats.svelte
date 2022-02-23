@@ -1,20 +1,54 @@
 <script lang="ts">
     import ChatSideBar from "./ChatSideBar.svelte";
-    import { chats } from "../stores";
-    import { Actions, ChatDetail, Streams, WebsocketData } from "../types";
+    import { chats, chatSelected } from "../stores";
+    import {
+        Actions,
+        ChatDetail,
+        MessageDetail,
+        Streams,
+        WebsocketData,
+    } from "../types";
     import { getContext, onMount } from "svelte";
+    import type { Writable } from "svelte/store";
 
-    const websocket = getContext<WebSocket>("websocket");
+    const ws = getContext<Writable<WebSocket>>("websocket");
+    $: websocket = $ws;
     let timeout;
     onMount(() => {
         console.log("Mount chats");
+        websocket.addEventListener("message", listenMessage);
         websocket.addEventListener("message", onChats);
         if (websocket.readyState === WebSocket.OPEN) loadChats();
         else timeout = setTimeout(loadChats, 1000);
         return () => {
+            websocket.removeEventListener("message", listenMessage);
             websocket.removeEventListener("message", onChats);
         };
     });
+    const listenMessage = (e: MessageEvent) => {
+        const {
+            stream,
+            payload: { action, data },
+        }: WebsocketData<MessageDetail> = JSON.parse(e.data);
+        if (
+            stream === Streams.Chats &&
+            action === Actions.Create &&
+            data.chat !== +$chatSelected
+        ) {
+            chats.update((prev) =>
+                prev.reduce<typeof prev>((acc, curr) => {
+                    if (!curr.hasOwnProperty("unread_count"))
+                        curr.unread_count = 0;
+                    if (curr.id === data.chat) {
+                        curr.last_message = data;
+                        curr.unread_count += 1;
+                    }
+                    acc.push(curr);
+                    return acc;
+                }, [])
+            );
+        }
+    };
 
     const loadChats = () => {
         if (timeout) clearTimeout(timeout);

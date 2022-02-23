@@ -1,17 +1,9 @@
 <script lang="ts">
-    import { createEventDispatcher, getContext, onMount } from "svelte";
     import { fade } from "svelte/transition";
     import { chats, chatSelected, messages } from "../stores";
-    import {
-        Actions,
-        ChatDetail,
-        MessageDetail,
-        Streams,
-        WebsocketData,
-    } from "../types";
+    import type { ChatDetail } from "../types";
 
     export let chat: ChatDetail;
-    const websocket = getContext<WebSocket>("websocket");
     $: console.log("chat side bar log ", chat);
     $: ({
         id,
@@ -32,40 +24,15 @@
         );
         chatSelected.set(chat.id.toString());
         messages.set([]);
-        // TODO setear read count a cero para el nuevo chat
+        chats.update((prev) => {
+            return prev.map((c) => {
+                if (c.id === chat.id) {
+                    c.unread_count = 0;
+                }
+                return c;
+            });
+        });
     };
-
-    const listenMessage = (e: MessageEvent) => {
-        // TODO mover este listener a un componente de más arriba, sino se repite dos veces 
-        const {
-            stream,
-            payload: { action, data },
-        }: WebsocketData<MessageDetail> = JSON.parse(e.data);
-        if (
-            stream === Streams.Chats &&
-            action === Actions.Create &&
-            data.chat === +$chatSelected
-        ) {
-            chats.update((prev) =>
-                prev.reduce<typeof prev>((acc, curr) => {
-                    if (!curr.hasOwnProperty("unread_count"))
-                        curr.unread_count = 0;
-                    if (curr.id === data.chat) {
-                        curr.last_message = data;
-                        curr.unread_count += 1;
-                    }
-                    acc.push(curr);
-                    return acc;
-                }, [])
-            );
-        }
-    };
-    onMount(() => {
-        websocket.addEventListener("message", listenMessage);
-        return () => {
-            websocket.removeEventListener("message", listenMessage);
-        };
-    });
 </script>
 
 <div

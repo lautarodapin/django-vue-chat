@@ -1,5 +1,6 @@
 <script lang="ts">
     import { getContext, onMount } from "svelte";
+    import type { Writable } from "svelte/store";
 
     import { chatSelected } from "../../stores";
 
@@ -11,7 +12,8 @@
     } from "../../types";
 
     let sendingMessage = false;
-    const websocket = getContext<WebSocket>("websocket");
+    const ws = getContext<Writable<WebSocket>>("websocket");
+    $: websocket = $ws;
     let input: string = "";
     let request_id: number = Date.now();
     $: chat = $chatSelected;

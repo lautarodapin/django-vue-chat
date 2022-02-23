@@ -5,8 +5,10 @@
     import { chatSelected, messages } from "../stores";
     import { Actions, MessageDetail, Streams, WebsocketData } from "../types";
     import { getContext, onDestroy, onMount } from "svelte";
+    import type { Writable } from "svelte/store";
 
-    const websocket = getContext<WebSocket>("websocket");
+    const ws = getContext<Writable<WebSocket>>("websocket");
+    $: websocket = $ws;
     let timeout;
 
     const listenMessages = (e: MessageEvent) => {
