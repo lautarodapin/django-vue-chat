@@ -51,13 +51,11 @@
 
     const unSubChat = chatSelected.subscribe((newChat) => {
         if (!newChat) return;
-        if (websocket.readyState === WebSocket.OPEN) loadMessages(newChat);
+        if (websocket?.readyState === WebSocket.OPEN) loadMessages(newChat);
         else setTimeout(() => loadMessages(newChat), 1000);
     });
+
     onMount(() => {
-        if (websocket.readyState === WebSocket.OPEN)
-            loadMessages($chatSelected);
-        else setTimeout(() => loadMessages($chatSelected), 1000);
         websocket.addEventListener("message", listenMessages);
         websocket.addEventListener("message", listenMessage);
         return () => {
@@ -65,6 +63,13 @@
             websocket.removeEventListener("message", listenMessage);
         };
     });
+
+    $: if (websocket) {
+        if (websocket.readyState === WebSocket.OPEN)
+            loadMessages($chatSelected);
+        else setTimeout(() => loadMessages($chatSelected), 1000);
+    }
+
     onDestroy(() => {
         unSubChat();
     });

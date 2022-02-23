@@ -11,7 +11,7 @@
     import { getContext, onMount } from "svelte";
     import type { Writable } from "svelte/store";
 
-    const ws = getContext<Writable<WebSocket>>("websocket");
+    const ws = getContext<Writable<WebSocket> | undefined>("websocket");
     $: websocket = $ws;
     let timeout;
     onMount(() => {
@@ -24,7 +24,7 @@
         };
     });
 
-    $: {
+    $: if (websocket) {
         if (websocket.readyState === WebSocket.OPEN) loadChats();
         else timeout = setTimeout(loadChats, 1000);
     }
