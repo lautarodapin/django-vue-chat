@@ -32,6 +32,7 @@
         );
         chatSelected.set(chat.id.toString());
         messages.set([]);
+        // TODO setear read count a cero para el nuevo chat
     };
 
     const listenMessage = (e: MessageEvent) => {
