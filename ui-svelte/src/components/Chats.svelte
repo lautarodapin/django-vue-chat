@@ -18,13 +18,17 @@
         console.log("Mount chats");
         websocket.addEventListener("message", listenMessage);
         websocket.addEventListener("message", onChats);
-        if (websocket.readyState === WebSocket.OPEN) loadChats();
-        else timeout = setTimeout(loadChats, 1000);
         return () => {
             websocket.removeEventListener("message", listenMessage);
             websocket.removeEventListener("message", onChats);
         };
     });
+
+    $: {
+        if (websocket.readyState === WebSocket.OPEN) loadChats();
+        else timeout = setTimeout(loadChats, 1000);
+    }
+
     const listenMessage = (e: MessageEvent) => {
         const {
             stream,
