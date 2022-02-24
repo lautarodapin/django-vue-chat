@@ -10,10 +10,13 @@
     } from "../types";
     import { getContext, onMount } from "svelte";
     import type { Writable } from "svelte/store";
+    import { fade } from "svelte/transition";
+    import GrowingSpinner from "./GrowingSpinner.svelte";
 
     const ws = getContext<Writable<WebSocket> | undefined>("websocket");
     $: websocket = $ws;
     let timeout;
+    let loading = false;
     onMount(() => {
         console.log("Mount chats");
         websocket.addEventListener("message", listenMessage);
@@ -57,6 +60,7 @@
     const loadChats = () => {
         if (timeout) clearTimeout(timeout);
         console.log("loadChats");
+        loading = true;
         websocket.send(
             JSON.stringify({
                 stream: Streams.Chats,
@@ -90,30 +94,16 @@
         }: WebsocketData<ChatDetail[]> = JSON.parse(e.data);
         if (stream === Streams.Chats && action === Actions.List) {
             chats.set(data);
+            loading = false;
             data.forEach(({ id }) => subscribeToChats(id));
         }
     };
 </script>
 
-<!-- svelte-ignore missing-declaration -->
-<!-- {#if !loading}
-  Loading...
-  <div transition:fade>
-    <GrowingSpinner size="16" />
-  </div>
-{:else} -->
-{#each $chats as chat}
-    <ChatSideBar {chat} />
-{/each}
-<!-- {/if} -->
-<!-- on:newMessage={({ detail: chat }) => {
-            chats = chats
-                .map((c) => (c.id === chat.id ? { ...chat } : c))
-                .sort((a, b) =>
-                    dayjs(a.last_message.created_at).isBefore(
-                        dayjs(b.last_message.created_at)
-                    )
-                        ? 1
-                        : -1
-                );
-        }} -->
+{#if loading}
+    Loading...
+{:else}
+    {#each $chats as chat}
+        <ChatSideBar {chat} />
+    {/each}
+{/if}
