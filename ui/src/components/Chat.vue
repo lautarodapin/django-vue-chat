@@ -1,145 +1,85 @@
 <script lang="ts" setup>
-    import { ref, onMounted, watch } from "vue";
-    import { MessageDetail, MessageList } from "../types";
-    import { useWs } from "../hooks/use-ws";
+import {chatSelected, messages, websocket} from '../stores'
+import {Actions, MessageDetail, Streams, WebsocketData} from '../types'
+import {onMounted, ref, watchEffect} from 'vue'
+import Message from './Message.vue'
+import Input from './Input.vue'
 
-    const props = defineProps<{ id?: number }>();
-    const loading = ref(false);
-    const messages = ref<MessageDetail[]>([]);
-    const input = ref("");
-    const next = ref("");
-    const { ws } = useWs();
+let loading = ref(false)
 
-    watch(
-        () => props.id,
-        (newId, oldId) => {
-            ws.value.onmessage = (event) => {
-                console.log(event);
-                const data: MessageDetail = JSON.parse(event.data);
-                console.log(data);
-                messages.value.push(data);
-            };
-            console.log("watch", oldId, newId);
-            if (newId) {
-                if (ws.value.readyState !== WebSocket.OPEN) {
-                    ws.value.onopen = () => {
-                        if (oldId) {
-                            ws.value.send(
-                                JSON.stringify({
-                                    action: "unsubscribe_to_chat",
-                                    id: oldId,
-                                    request_id: Math.random(),
-                                })
-                            );
-                        }
-                        ws.value.send(
-                            JSON.stringify({
-                                action: "subscribe_to_chat",
-                                id: newId,
-                                request_id: Math.random(),
-                            })
-                        );
-                    };
-                } else {
-                    if (oldId) {
-                        ws.value.send(
-                            JSON.stringify({
-                                action: "unsubscribe_to_chat",
-                                id: oldId,
-                                request_id: Math.random(),
-                            })
-                        );
-                    }
-                    ws.value.send(
-                        JSON.stringify({
-                            action: "subscribe_to_chat",
-                            id: newId,
-                            request_id: Math.random(),
-                        })
-                    );
-                }
-            }
-        },
-        { immediate: true }
-    );
+let timeout = ref<number>()
 
-    const getMessages = async () => {
-        loading.value = true;
-        try {
-            const response = await fetch(
-                `http://localhost:8000/messages/?chat=${props.id}`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Token ${localStorage.getItem("token")}`,
-                    },
-                }
-            );
-            const data: MessageList = await response.json();
-            if (response.ok) {
-                messages.value = [...data.results];
-                next.value = data.next;
-            }
-        } finally {
-            loading.value = false;
-        }
-    };
-
-    getMessages();
-
-    const createMessage = async () => {
-        try {
-            await fetch(`http://localhost:8000/messages/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Token ${localStorage.getItem("token")}`,
+const listenMessages = (e: MessageEvent) => {
+    const {
+        stream,
+        payload: {action, request_id, data},
+    }: WebsocketData<MessageDetail[]> = JSON.parse(e.data)
+    if (stream === Streams.Messages && action === Actions.List) {
+        messages.value = data
+        loading.value = false
+    }
+}
+const listenMessage = (e: MessageEvent) => {
+    const {
+        stream,
+        payload: {action, data},
+    }: WebsocketData<MessageDetail> = JSON.parse(e.data)
+    if (
+        stream === Streams.Chats &&
+        action === Actions.Create &&
+        data.chat === chatSelected.value
+    ) {
+        messages.value = [data, ...messages.value]
+    }
+}
+const loadMessages = (chat: number | null) => {
+    if (chat === null) return
+    loading.value = true
+    if (timeout) clearTimeout(timeout.value)
+    websocket.value.send(
+        JSON.stringify({
+            stream: Streams.Messages,
+            payload: {
+                action: Actions.List,
+                filters: {
+                    chat__id: chat,
                 },
-                body: JSON.stringify({
-                    text: input.value,
-                    chat: props.id,
-                }),
-            });
-        } finally {
-        }
-    };
+                request_id: Date.now(),
+            },
+        })
+    )
+}
+
+watchEffect(() => {
+    if (!chatSelected.value) return
+    if (websocket.value.readyState === WebSocket.OPEN) loadMessages(chatSelected.value)
+    else timeout.value = setTimeout(() => loadMessages(chatSelected.value), 1000)
+})
+
+onMounted(() => {
+    websocket.value.addEventListener("message", listenMessages)
+    websocket.value.addEventListener("message", listenMessage)
+    return () => {
+        websocket.value.removeEventListener("message", listenMessages)
+        websocket.value.removeEventListener("message", listenMessage)
+    }
+})
+
+watchEffect(() => {
+    if (websocket.value.readyState === WebSocket.OPEN)
+        loadMessages(chatSelected.value)
+    else setTimeout(() => loadMessages(chatSelected.value), 1000)
+})
 </script>
 
 <template>
-    <div class="h-screen bg-stone-100">
-        <div class="min-h-full flex flex-col-reverse">
-            <form @submit.prevent="createMessage" class="flex flex-row">
-                <input
-                    v-model="input"
-                    type="text"
-                    class="bg-slate-200 rounded-md px-2 mr-2 grow"
-                />
-                <button
-                    type="submit"
-                    class="
-                        px-10
-                        rounded-md
-                        bg-slate-700
-                        text-white
-                        hover:bg-slate-400 hover:text-black
-                    "
-                >
-                    Send
-                </button>
-            </form>
-            <div
-                v-for="message in messages"
-                :key="message.id"
-                class="
-                    transition-transform
-                    duration-1000
-                    delay-1000
-                    ease-in-out
-                "
-            >
-                {{ message.text }}
-            </div>
+    <div transition:fade class="h-[95vh] flex flex-col-reverse">
+        <Input />
+        <div class="overflow-y-scroll flex flex-col-reverse">
+            <Message v-for="message in messages" :key="message.id" :message="message" />
         </div>
+    </div>
+    <div transition:fade class="h-[95vh] flex justify-center">
+        <div class="flex self-center font-mono">Loading...</div>
     </div>
 </template>

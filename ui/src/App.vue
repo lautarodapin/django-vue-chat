@@ -1,39 +1,28 @@
 <script setup lang="ts">
-import { ref } from "@vue/reactivity";
-import Login from "../src/components/Login.vue";
-import SideBar from "../src/components/SideBar.vue";
-import SideChat from "../src/components/SideChat.vue";
-import Chat from "../src/components/Chat.vue";
-import { useChats } from "../src/hooks/use-chats";
-const { chats, loading } = useChats();
-const selected = ref(4);
-const token = localStorage.getItem("token");
+import {token, chatSelected} from "./stores"
+import Login from "./components/Login.vue"
+import SideBar from "./components/SideBar.vue"
+import Chats from "./components/Chats.vue"
+import Chat from './components/Chat.vue'
 
-const handleSelected = (id: number) => {
-  selected.value = id;
-  console.log(id);
-};
 </script>
 
 <template>
-  <div>
-    <side-bar>
-      <side-chat
-        v-for="chat in chats"
-        :key="chat.id"
-        :chat="chat"
-        :selected="chat.id === selected"
-        @click="handleSelected"
-      />
-    </side-bar>
-    <div class="pl-64">
-      <chat :id="selected" />
+    <div>
+        <side-bar>
+            <chats />
+        </side-bar>
+        <div class="pl-64" v-if="token">
+            <chat v-if="chatSelected" />
+            <div
+                v-else
+                class="h-[95vh] flex justify-center text-4xl text-slate-600"
+            >Seleccione un chat</div>
+            <Login />
+        </div>
+        <div v-else class="pl-64">
+            <login />
+        </div>
     </div>
-    <!-- <div v-if="!token">
-      <login />
-    </div>
-    <div v-else>
-    </div> -->
-  </div>
 </template>
 
