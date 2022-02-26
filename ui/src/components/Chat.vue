@@ -73,13 +73,13 @@ watchEffect(() => {
 </script>
 
 <template>
-    <div transition:fade class="h-[95vh] flex flex-col-reverse">
+    <div v-if="!loading" class="h-[95vh] flex flex-col-reverse">
         <Input />
         <div class="overflow-y-scroll flex flex-col-reverse">
             <Message v-for="message in messages" :key="message.id" :message="message" />
         </div>
     </div>
-    <div transition:fade class="h-[95vh] flex justify-center">
+    <div v-else class="h-[95vh] flex justify-center">
         <div class="flex self-center font-mono">Loading...</div>
     </div>
 </template>

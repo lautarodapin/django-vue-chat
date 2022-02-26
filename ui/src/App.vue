@@ -18,7 +18,6 @@ import Chat from './components/Chat.vue'
                 v-else
                 class="h-[95vh] flex justify-center text-4xl text-slate-600"
             >Seleccione un chat</div>
-            <Login />
         </div>
         <div v-else class="pl-64">
             <login />

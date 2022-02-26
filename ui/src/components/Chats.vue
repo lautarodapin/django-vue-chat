@@ -48,10 +48,10 @@ const listenMessage = (e: MessageEvent) => {
     }: WebsocketData<MessageDetail> = JSON.parse(e.data)
     if (
         stream === Streams.Chats &&
-        action === Actions.Create &&
-        data.chat !== chatSelected.value
+        action === Actions.Create
     ) {
         chats.value = chats.value.reduce<typeof chats.value>((acc, curr) => {
+            if (data.chat === curr.id) curr.last_message = data
             if (!('unread_count' in curr)) curr.unread_count = 0
             else if (curr.id === data.chat) {
                 curr.last_message = data
@@ -61,6 +61,7 @@ const listenMessage = (e: MessageEvent) => {
             return acc
         }, [])
     }
+
 }
 
 const subscribeToChats = (id: number) => {

@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-
-
 import {chatSelected, websocket} from '../stores'
 import {
     Actions,
@@ -11,7 +9,7 @@ import {
 import {onMounted, ref} from 'vue'
 
 let sendingMessage = ref(false)
-let input: string = ""
+let input = ref('')
 let request_id = ref(Date.now())
 
 const listenMessage = (e: MessageEvent) => {
@@ -25,7 +23,7 @@ const listenMessage = (e: MessageEvent) => {
         action === Actions.Create &&
         request_id.value === id
     ) {
-        input = ""
+        input.value = ""
         request_id.value = Date.now()
         sendingMessage.value = false
     }
@@ -44,9 +42,9 @@ const createMessage = async () => {
             stream: Streams.Messages,
             payload: {
                 action: Actions.Create,
-                request_id,
+                request_id: request_id.value,
                 data: {
-                    text: input,
+                    text: input.value,
                     chat: chatSelected.value,
                 },
             },
@@ -60,7 +58,7 @@ const createMessage = async () => {
         createMessage()
     }">
         <input
-            bind:value="{input}"
+            v-model="input"
             type="text"
             class="bg-slate-200 border-slate-400 rounded-md mr-2 grow focus:border-slate-700 border-[.12rem] focus:border-[.2rem] px-2 py-1"
         />

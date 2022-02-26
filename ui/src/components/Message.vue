@@ -3,9 +3,9 @@ import {MessageDetail} from '../types'
 import {fromNow} from '../utils'
 
 
-const {message: {created_at, created_by: {username} = {}, text}} = defineProps<{message: MessageDetail}>()
+const props = defineProps<{message: MessageDetail}>()
 </script>
 
 <template>
-    <div>{{fromNow(created_at)}} - {{username}}: {{message.text}}</div>
+    <div>{{fromNow(props.message.created_at)}} - {{props.message.created_by?.username}}: {{props.message.text}}</div>
 </template>
